@@ -54,6 +54,46 @@ Dave  (Revoked, Org-A)  ───► GET /api/projects/1001 ───► HTTP 20
   <img src="docs/assets/terminal.svg" alt="StateWeaver Terminal Execution Demo" width="100%" />
 </div>
 
+<details>
+<summary><b>🔍 Click to expand full terminal output transcript</b></summary>
+
+```text
+$ stateweaver test --target http://127.0.0.1:8080 --read-only=false
+
+==================================================
+       STATEWEAVER DIFFERENTIAL TEST SUITE        
+==================================================
+Baseline Endpoints:   4
+Identities Involved:  5
+Test Hypotheses:      16
+Rate Limit:           5 req/sec
+Max Budget:           200 requests
+Read-Only Mode:       false
+--------------------------------------------------
+  [!] [Critical] Cross-Tenant Access Weakness on http://127.0.0.1:8080/api/projects by Charlie (Member Org-B) -> HTTP 200 (Expected [401 403 404])
+  [!] [Critical] Revoked-Access Inconsistency on http://127.0.0.1:8080/api/projects by Dave (Revoked Member) -> HTTP 200 (Expected [401 403 404])
+  [!] [High] Broken Authentication on http://127.0.0.1:8080/api/projects by Anonymous User -> HTTP 200 (Expected [401 403 404])
+  [!] [Critical] Cross-Tenant Access Weakness on http://127.0.0.1:8080/api/projects/1001 by Charlie (Member Org-B) -> HTTP 200 (Expected [401 403 404])
+  [!] [Critical] Revoked-Access Inconsistency on http://127.0.0.1:8080/api/projects/1001 by Dave (Revoked Member) -> HTTP 200 (Expected [401 403 404])
+  [!] [High] Broken Authentication on http://127.0.0.1:8080/api/projects/1001 by Anonymous User -> HTTP 200 (Expected [401 403 404])
+  [!] [Critical] Cross-Tenant Access Weakness on http://127.0.0.1:8080/api/projects/1001/secrets by Charlie (Member Org-B) -> HTTP 200 (Expected [401 403 404])
+  [!] [Critical] Revoked-Access Inconsistency on http://127.0.0.1:8080/api/projects/1001/secrets by Dave (Revoked Member) -> HTTP 200 (Expected [401 403 404])
+  [!] [High] Broken Authentication on http://127.0.0.1:8080/api/projects/1001/secrets by Anonymous User -> HTTP 200 (Expected [401 403 404])
+  [!] [High] Role-Based Authorization Flaw on http://127.0.0.1:8080/api/projects/1001 by Bob (Viewer) -> HTTP 204 (Expected [401 403 404])
+==================================================
+                 EXECUTION SUMMARY                
+==================================================
+Probes Dispatched:    16 / 16
+Findings Discovered:  10
+--------------------------------------------------
+Reports Generated:
+  • JSON:     reports/report.json
+  • Markdown: reports/report.md
+  • HTML:     reports/report.html
+==================================================
+```
+</details>
+
 ---
 
 ## Key Capabilities
