@@ -13,10 +13,10 @@ import (
 
 // OpenAPISpec represents a subset of OpenAPI 2.0 / 3.0 specification.
 type OpenAPISpec struct {
-	OpenAPI string                            `json:"openapi" yaml:"openapi"`
-	Swagger string                            `json:"swagger" yaml:"swagger"`
-	Info    OpenAPIInfo                       `json:"info" yaml:"info"`
-	Paths   map[string]map[string]OpenAPIOp   `json:"paths" yaml:"paths"`
+	OpenAPI string                          `json:"openapi" yaml:"openapi"`
+	Swagger string                          `json:"swagger" yaml:"swagger"`
+	Info    OpenAPIInfo                     `json:"info" yaml:"info"`
+	Paths   map[string]map[string]OpenAPIOp `json:"paths" yaml:"paths"`
 }
 
 // OpenAPIInfo metadata.

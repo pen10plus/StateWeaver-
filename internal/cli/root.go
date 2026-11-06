@@ -45,4 +45,3 @@ func init() {
 	RootCmd.AddCommand(labCmd)
 	RootCmd.AddCommand(versionCmd)
 }
-
