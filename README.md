@@ -1,23 +1,43 @@
-# StateWeaver
+<div align="center">
 
-> **"Find the security bugs that scanners can't understand."**
+  <img src="docs/assets/banner.svg" alt="StateWeaver Animated Banner" width="100%" />
 
-[![CI](https://github.com/stateweaver/stateweaver/actions/workflows/ci.yml/badge.svg)](https://github.com/stateweaver/stateweaver/actions/workflows/ci.yml)
-[![Go Version](https://img.shields.io/badge/go-1.23%2B-blue.svg)](https://golang.org)
-[![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
-[![Benchmark Precision](https://img.shields.io/badge/benchmark%20precision-100%25-brightgreen.svg)](#benchmark-verification)
+  <br/><br/>
 
-StateWeaver is an open-source, stateful API security research engine designed to discover authorization inconsistencies and business-logic vulnerabilities in modern web applications.
+  [![CI Pipeline](https://github.com/pen10plus/StateWeaver-/actions/workflows/ci.yml/badge.svg)](https://github.com/pen10plus/StateWeaver-/actions/workflows/ci.yml)
+  [![Go Version](https://img.shields.io/badge/go-1.23%2B-blue.svg)](https://golang.org)
+  [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
+  [![Benchmark Precision](https://img.shields.io/badge/benchmark%20precision-100%25-brightgreen.svg)](#benchmark-verification)
+  [![Tests Passing](https://img.shields.io/badge/tests-passing-brightgreen.svg)](#benchmark-verification)
+
+  <p align="center">
+    <strong>An open-source, stateful API security research engine designed to identify Broken Object Level Authorization (BOLA/IDOR), cross-tenant access leaks, and privilege escalations.</strong>
+  </p>
+
+  <p align="center">
+    <a href="#quickstart-guide">Quickstart</a> •
+    <a href="#the-core-hypothesis">Hypothesis</a> •
+    <a href="#benchmark-verification">Benchmark</a> •
+    <a href="#cli-command-reference">CLI Reference</a> •
+    <a href="docs/architecture.md">Architecture</a> •
+    <a href="#safety--ethics-policy">Safety Policy</a>
+  </p>
+
+</div>
 
 ---
 
 ## The Core Hypothesis
 
-Traditional application security scanners analyze endpoints individually, firing synthetic exploit vectors (SQL injection patterns, script tags, serialized blobs) and watching for server crashes or error messages.
+Traditional security scanners analyze endpoints individually, firing synthetic exploit vectors (SQL injection syntax, XSS tags, serialized blobs) and watching for server crashes or error messages.
 
-However, many critical vulnerabilities—including **Broken Object Level Authorization (BOLA/IDOR)**, **cross-tenant access-control leaks**, **privilege escalations**, and **revoked credential retention**—never produce an error code. The application returns `HTTP 200 OK` with valid JSON data because the bug lives entirely in the interaction between identities, resources, permissions, and application state.
+However, modern API vulnerabilities—specifically **Broken Object Level Authorization (BOLA/IDOR)**, **cross-tenant access leaks**, **privilege escalations**, and **revoked credential retention**—never produce an error code. The application returns `HTTP 200 OK` with valid JSON data because the flaw lives entirely in the interaction between identities, resources, permissions, and application state.
 
-StateWeaver systematically analyzes these relationships using **identity-aware differential testing**.
+StateWeaver systematically analyzes these relationships using **identity-aware differential testing**:
+
+<div align="center">
+  <img src="docs/assets/differential-flow.svg" alt="Differential Testing Flow" width="100%" />
+</div>
 
 ```
 Alice (Owner, Org-A)    ───► GET /api/projects/1001 ───► HTTP 200 OK (Baseline)
@@ -25,6 +45,14 @@ Bob   (Viewer, Org-A)   ───► DELETE /api/projects/1001──► HTTP 204
 Charlie (Member, Org-B) ───► GET /api/projects/1001 ───► HTTP 200 OK          ⚠️ (Cross-Tenant BOLA)
 Dave  (Revoked, Org-A)  ───► GET /api/projects/1001 ───► HTTP 200 OK          ⚠️ (Stale Revocation)
 ```
+
+---
+
+## Live Terminal Demo
+
+<div align="center">
+  <img src="docs/assets/terminal.svg" alt="StateWeaver Terminal Execution Demo" width="100%" />
+</div>
 
 ---
 
@@ -73,12 +101,12 @@ Dave  (Revoked, Org-A)  ───► GET /api/projects/1001 ───► HTTP 20
 
 ```bash
 # Clone the repository
-git clone https://github.com/stateweaver/stateweaver.git
+git clone https://github.com/pen10plus/StateWeaver-.git
 cd stateweaver
 
-# Build binary
-make build
-# Binary created as ./stateweaver (or stateweaver.exe on Windows)
+# Build standalone binary
+go build -buildvcs=false -o stateweaver ./cmd/stateweaver
+# On Windows: creates stateweaver.exe
 ```
 
 ### 2. Initialize a Workspace
@@ -156,10 +184,11 @@ StateWeaver is evaluated against an intentionally vulnerable multi-tenant projec
 | `stateweaver init` | Initialize a new workspace with configuration, policies, and database. |
 | `stateweaver scope show` | View current in-scope targets, port filters, and execution boundaries. |
 | `stateweaver scope add <target>` | Add a target domain or IP:port to the allowed testing scope. |
+| `stateweaver scope remove <target>` | Remove a target domain or IP:port from the allowed testing scope. |
 | `stateweaver import <file>` | Parse HAR 1.2 archives or OpenAPI 3.0 specifications. |
 | `stateweaver analyze` | Build entity relationship and workflow state transition graphs. |
 | `stateweaver test` | Run differential authorization test probes across identities. |
-| `stateweaver report` | Generate reports in JSON, Markdown, and HTML formats. |
+| `stateweaver report` | Generate reports in JSON, Markdown, and interactive HTML formats. |
 | `stateweaver lab start` | Launch the local vulnerable (:8080) and secure (:8081) test APIs. |
 | `stateweaver lab stop` | Stop active local lab processes. |
 | `stateweaver version` | Display tool version and runtime build metadata. |
@@ -194,4 +223,3 @@ StateWeaver is engineered strictly for defensive security research, authorized p
 ## License
 
 StateWeaver is open-source software licensed under the [Apache License 2.0](LICENSE).
-
