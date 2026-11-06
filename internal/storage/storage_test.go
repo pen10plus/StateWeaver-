@@ -118,4 +118,3 @@ func TestStorage(t *testing.T) {
 		t.Errorf("expected Critical severity, got %s", loadedFindings[0].Severity)
 	}
 }
-

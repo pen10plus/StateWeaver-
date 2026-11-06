@@ -52,6 +52,36 @@ var scopeAddCmd = &cobra.Command{
 	},
 }
 
+var scopeRemoveCmd = &cobra.Command{
+	Use:   "remove <target>",
+	Short: "Remove a target host from the allowed scope",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		target := strings.TrimSpace(args[0])
+		if target == "" {
+			return fmt.Errorf("target cannot be empty")
+		}
+
+		cfg, err := config.Load(cfgFile)
+		if err != nil {
+			cfg = config.DefaultConfig()
+		}
+
+		store, err := storage.Open(cfg.Paths.DatabasePath)
+		if err != nil {
+			return fmt.Errorf("failed to open database: %w", err)
+		}
+		defer store.Close()
+
+		if err := store.DeleteScope(target); err != nil {
+			return fmt.Errorf("failed to delete scope from database: %w", err)
+		}
+
+		fmt.Printf("[✓] In-scope target removed: %s\n", target)
+		return nil
+	},
+}
+
 var scopeShowCmd = &cobra.Command{
 	Use:   "show",
 	Short: "Display current in-scope targets and execution boundaries",
@@ -98,6 +128,7 @@ var scopeShowCmd = &cobra.Command{
 
 func init() {
 	scopeCmd.AddCommand(scopeAddCmd)
+	scopeCmd.AddCommand(scopeRemoveCmd)
 	scopeCmd.AddCommand(scopeShowCmd)
 }
 

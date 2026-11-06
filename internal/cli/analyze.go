@@ -107,6 +107,18 @@ var analyzeCmd = &cobra.Command{
 		fmt.Println("[✓] Traffic Analysis Complete!")
 		fmt.Printf("    • Relationship Entities: %d | Edges: %d\n", len(relGraph.Nodes), len(relGraph.Edges))
 		fmt.Printf("    • Workflow Operation Nodes: %d | Transitions: %d\n", len(wfGraph.Nodes), len(wfGraph.Edges))
+
+		if len(wfGraph.Nodes) > 0 {
+			fmt.Println("\nObserved Application Workflow Progression:")
+			for idx, n := range wfGraph.Nodes {
+				if idx == 0 {
+					fmt.Printf("  [1] %s\n", n.Description)
+				} else {
+					fmt.Printf("       │\n       ▼\n  [%d] %s\n", idx+1, n.Description)
+				}
+			}
+		}
+
 		fmt.Printf("\nExported Visualizations:\n")
 		fmt.Printf("    - DOT:  %s\n", relDotPath)
 		fmt.Printf("    - JSON: %s\n", relJSONPath)

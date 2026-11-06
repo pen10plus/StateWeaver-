@@ -83,4 +83,3 @@ func TestReporterJSONMarkdownHTML(t *testing.T) {
 		t.Errorf("expected HTML report with title")
 	}
 }
-

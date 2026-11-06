@@ -14,14 +14,14 @@ import (
 
 // ReportMetadata contains scan context, target info, and summary metrics.
 type ReportMetadata struct {
-	ToolVersion    string                 `json:"tool_version"`
-	ProjectName    string                 `json:"project_name"`
-	ScanTime       time.Time              `json:"scan_time"`
-	TargetScope    []string               `json:"target_scope"`
-	TotalRequests  int                    `json:"total_requests"`
-	TotalFindings  int                    `json:"total_findings"`
-	SeverityCounts map[string]int         `json:"severity_counts"`
-	Benchmark      *BenchmarkMetrics      `json:"benchmark,omitempty"`
+	ToolVersion    string            `json:"tool_version"`
+	ProjectName    string            `json:"project_name"`
+	ScanTime       time.Time         `json:"scan_time"`
+	TargetScope    []string          `json:"target_scope"`
+	TotalRequests  int               `json:"total_requests"`
+	TotalFindings  int               `json:"total_findings"`
+	SeverityCounts map[string]int    `json:"severity_counts"`
+	Benchmark      *BenchmarkMetrics `json:"benchmark,omitempty"`
 }
 
 // BenchmarkMetrics records precision/recall when evaluated against verified lab ground-truth.
@@ -36,8 +36,8 @@ type BenchmarkMetrics struct {
 
 // Report holds the complete dataset for all report formats.
 type Report struct {
-	Metadata ReportMetadata          `json:"metadata"`
-	Findings []*validator.Finding    `json:"findings"`
+	Metadata ReportMetadata       `json:"metadata"`
+	Findings []*validator.Finding `json:"findings"`
 }
 
 // Reporter handles outputting reports in JSON, Markdown, and HTML.
@@ -148,7 +148,7 @@ func (r *Reporter) WriteHTML(path string) error {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StateWeaver Security Report</title>
+<title>StateWeaver Security Audit Report</title>
 <style>
   :root {
     --bg: #0f172a; --card-bg: #1e293b; --text: #f8fafc; --text-muted: #94a3b8;
@@ -165,14 +165,21 @@ func (r *Reporter) WriteHTML(path string) error {
   .badge-high { background: rgba(249, 115, 22, 0.2); color: var(--high); border: 1px solid var(--high); }
   .badge-medium { background: rgba(234, 179, 8, 0.2); color: var(--medium); border: 1px solid var(--medium); }
   .badge-low { background: rgba(59, 130, 246, 0.2); color: var(--low); border: 1px solid var(--low); }
-  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2.5rem; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
   .stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
   .stat-val { font-size: 2rem; font-weight: 700; margin-top: 0.5rem; }
-  .finding-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .controls-bar { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; align-items: center; justify-content: space-between; }
+  .search-input { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); padding: 0.6rem 1rem; border-radius: 6px; font-size: 0.9rem; flex: 1; min-width: 250px; }
+  .filter-btns { display: flex; gap: 0.5rem; }
+  .filter-btn { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
+  .filter-btn.active, .filter-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .finding-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; transition: transform 0.15s; }
   .finding-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
   .finding-title { font-size: 1.2rem; font-weight: 600; color: #fff; margin: 0; }
   .meta-row { display: flex; flex-wrap: wrap; gap: 1.5rem; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; }
-  pre { background: #0b1120; border: 1px solid var(--border); border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: 0.85rem; color: #e2e8f0; }
+  pre { background: #0b1120; border: 1px solid var(--border); border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: 0.85rem; color: #e2e8f0; position: relative; }
+  .copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 0.25rem 0.6rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
+  .copy-btn:hover { color: #fff; border-color: var(--accent); }
   .remediation-box { background: rgba(99, 102, 241, 0.1); border-left: 4px solid var(--accent); padding: 1rem; border-radius: 4px; margin-top: 1rem; }
 </style>
 </head>
@@ -217,7 +224,18 @@ func (r *Reporter) WriteHTML(path string) error {
   </div>
 </div>
 
+<div class="controls-bar">
+  <input type="text" id="searchInput" class="search-input" placeholder="Search by endpoint, identity, category, or ID...">
+  <div class="filter-btns">
+    <button class="filter-btn active" onclick="filterSeverity('all')">All</button>
+    <button class="filter-btn" onclick="filterSeverity('critical')">Critical</button>
+    <button class="filter-btn" onclick="filterSeverity('high')">High</button>
+    <button class="filter-btn" onclick="filterSeverity('medium')">Medium</button>
+  </div>
+</div>
+
 <h2>Findings Log</h2>
+<div id="findingsContainer">
 `)
 
 	if len(r.report.Findings) == 0 {
@@ -235,7 +253,7 @@ func (r *Reporter) WriteHTML(path string) error {
 			}
 
 			sb.WriteString(fmt.Sprintf(`
-<div class="finding-card">
+<div class="finding-card" data-severity="%s" data-search="%s">
   <div class="finding-header">
     <div>
       <h3 class="finding-title">%s: %s %s</h3>
@@ -255,13 +273,15 @@ func (r *Reporter) WriteHTML(path string) error {
   <div style="margin-top:0.25rem;"><strong>Observed:</strong> <span style="color:var(--critical);">%s</span></div>
 
   <h4 style="margin-top:1rem;margin-bottom:0.5rem;font-size:0.95rem;">Reproduction</h4>
-  <pre><code>%s</code></pre>
+  <pre><code>%s</code><button class="copy-btn" onclick="copySnippet(this)">Copy</button></pre>
 
   <div class="remediation-box">
     <strong>Remediation:</strong> %s
   </div>
 </div>
 `,
+				strings.ToLower(f.Severity),
+				html.EscapeString(strings.ToLower(fmt.Sprintf("%s %s %s %s %s", f.ID, f.Category, f.Endpoint, f.AffectedIdentity, f.Resource))),
 				html.EscapeString(f.Category), html.EscapeString(f.HTTPMethod), html.EscapeString(f.Endpoint),
 				html.EscapeString(f.Resource), html.EscapeString(f.ID),
 				badgeClass, html.EscapeString(f.Severity),
@@ -276,6 +296,40 @@ func (r *Reporter) WriteHTML(path string) error {
 
 	sb.WriteString(`
 </div>
+</div>
+<script>
+let activeSeverity = 'all';
+
+function filterSeverity(sev) {
+  activeSeverity = sev;
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.innerText.toLowerCase() === sev);
+  });
+  applyFilters();
+}
+
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+function applyFilters() {
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  document.querySelectorAll('.finding-card').forEach(card => {
+    const cardSev = card.getAttribute('data-severity');
+    const searchData = card.getAttribute('data-search') || '';
+    const matchesSev = (activeSeverity === 'all' || cardSev === activeSeverity);
+    const matchesQuery = !query || searchData.includes(query);
+    card.style.display = (matchesSev && matchesQuery) ? 'block' : 'none';
+  });
+}
+
+function copySnippet(btn) {
+  const code = btn.parentElement.querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    const orig = btn.innerText;
+    btn.innerText = 'Copied!';
+    setTimeout(() => { btn.innerText = orig; }, 1500);
+  });
+}
+</script>
 </body>
 </html>
 `)
@@ -290,4 +344,3 @@ func ensureDir(path string) error {
 	}
 	return nil
 }
-
