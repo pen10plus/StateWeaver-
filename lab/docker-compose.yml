@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  vulnerable-api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: vulnerable-lab
+    container_name: stateweaver-vulnerable-api
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    environment:
+      - PORT=8080
+
+  secure-api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: secure-lab
+    container_name: stateweaver-secure-api
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+    environment:
+      - PORT=8081
+

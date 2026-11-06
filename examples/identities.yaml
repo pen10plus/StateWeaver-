@@ -1,0 +1,41 @@
+identities:
+  - id: alice
+    name: Alice (Owner)
+    role: owner
+    tenant_id: org-a
+    user_id: user-101
+    auth_type: bearer
+    token: token-alice-org-a-owner
+
+  - id: bob
+    name: Bob (Viewer)
+    role: viewer
+    tenant_id: org-a
+    user_id: user-102
+    auth_type: bearer
+    token: token-bob-org-a-viewer
+
+  - id: charlie
+    name: Charlie (Member Org-B)
+    role: member
+    tenant_id: org-b
+    user_id: user-201
+    auth_type: bearer
+    token: token-charlie-org-b-member
+
+  - id: dave
+    name: Dave (Revoked Member)
+    role: member
+    tenant_id: org-a
+    user_id: user-103
+    auth_type: bearer
+    token: token-dave-org-a-revoked
+    is_revoked: true
+
+  - id: anonymous
+    name: Anonymous User
+    role: anonymous
+    tenant_id: ""
+    user_id: ""
+    auth_type: none
+

@@ -1,0 +1,60 @@
+version: "1.0"
+policies:
+  - name: cross-tenant-isolation
+    description: Tenants must never read or modify resources belonging to another organization
+    category: Cross-Tenant Access Weakness
+    severity: Critical
+    resource: "*"
+    action: "*"
+    cross_tenant: true
+    expected: deny
+    expected_http_status: [403, 404]
+    remediation: Enforce strict tenant_id scoping in database queries and verify tenant membership from authenticated session token.
+
+  - name: viewer-cannot-delete-project
+    description: Users with Viewer role must not be able to delete projects
+    category: Role-Based Authorization Flaw
+    severity: High
+    resource: project
+    action: delete
+    roles:
+      - viewer
+    expected: deny
+    expected_http_status: [403]
+    remediation: Ensure role-based permission checks verify DELETE permission before executing project deletion.
+
+  - name: viewer-cannot-access-secrets
+    description: Users with Viewer role must not access sensitive project secrets
+    category: Role-Based Authorization Flaw
+    severity: High
+    resource: secrets
+    action: read
+    roles:
+      - viewer
+    expected: deny
+    expected_http_status: [403]
+    remediation: Restrict secrets endpoint to Owner and Admin roles only.
+
+  - name: revoked-member-denied
+    description: Revoked or deactivated members must not retain access to organization resources
+    category: Revoked-Access Inconsistency
+    severity: Critical
+    resource: "*"
+    action: "*"
+    revoked_access: true
+    expected: deny
+    expected_http_status: [401, 403]
+    remediation: Check real-time revocation status in database/cache rather than relying solely on non-expiring JWT claims.
+
+  - name: unauthenticated-access-denied
+    description: Unauthenticated requests to protected API endpoints must be rejected
+    category: Broken Authentication
+    severity: High
+    resource: "*"
+    action: "*"
+    roles:
+      - anonymous
+    expected: deny
+    expected_http_status: [401, 403]
+    remediation: Enforce authentication middleware on all private API routes.
+

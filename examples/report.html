@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StateWeaver Security Report</title>
+<style>
+  :root {
+    --bg: #0f172a; --card-bg: #1e293b; --text: #f8fafc; --text-muted: #94a3b8;
+    --border: #334155; --critical: #ef4444; --high: #f97316; --medium: #eab308;
+    --low: #3b82f6; --success: #10b981; --accent: #6366f1;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 2rem; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  header { border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; }
+  h1 { margin: 0; font-size: 1.8rem; color: #fff; }
+  .tagline { color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem; }
+  .badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+  .badge-critical { background: rgba(239, 68, 68, 0.2); color: var(--critical); border: 1px solid var(--critical); }
+  .badge-high { background: rgba(249, 115, 22, 0.2); color: var(--high); border: 1px solid var(--high); }
+  .badge-medium { background: rgba(234, 179, 8, 0.2); color: var(--medium); border: 1px solid var(--medium); }
+  .badge-low { background: rgba(59, 130, 246, 0.2); color: var(--low); border: 1px solid var(--low); }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2.5rem; }
+  .stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
+  .stat-val { font-size: 2rem; font-weight: 700; margin-top: 0.5rem; }
+  .finding-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .finding-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+  .finding-title { font-size: 1.2rem; font-weight: 600; color: #fff; margin: 0; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 1.5rem; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; }
+  pre { background: #0b1120; border: 1px solid var(--border); border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: 0.85rem; color: #e2e8f0; }
+  .remediation-box { background: rgba(99, 102, 241, 0.1); border-left: 4px solid var(--accent); padding: 1rem; border-radius: 4px; margin-top: 1rem; }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <div>
+    <h1>StateWeaver Security Audit Report</h1>
+    <div class="tagline">"Find the security bugs that scanners can't understand."</div>
+  </div>
+  <div>
+    <span class="badge" style="background:#334155;color:#f8fafc;">v1.0.0</span>
+  </div>
+</header>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div style="color:var(--text-muted);font-size:0.85rem;">TOTAL FINDINGS</div>
+    <div class="stat-val">10</div>
+  </div>
+  <div class="stat-card">
+    <div style="color:var(--critical);font-size:0.85rem;">CRITICAL</div>
+    <div class="stat-val" style="color:var(--critical);">6</div>
+  </div>
+  <div class="stat-card">
+    <div style="color:var(--high);font-size:0.85rem;">HIGH</div>
+    <div class="stat-val" style="color:var(--high);">4</div>
+  </div>
+  <div class="stat-card">
+    <div style="color:var(--medium);font-size:0.85rem;">MEDIUM</div>
+    <div class="stat-val" style="color:var(--medium);">0</div>
+  </div>
+</div>
+
+<h2>Findings Log</h2>
+
+<div class="finding-card">
+  <div class="finding-header">
+    <div>
+      <h3 class="finding-title">Cross-Tenant Access Weakness: GET http://127.0.0.1:8080/api/projects</h3>
+      <div style="color:var(--text-muted);font-size:0.85rem;margin-top:0.25rem;">project | ID: SW-FINDING-0001</div>
+    </div>
+    <span class="badge badge-critical">Critical</span>
+  </div>
+
+  <div class="meta-row">
+    <div><strong>Identity:</strong> Charlie (Member Org-B) (Role: member, Tenant: org-b)</div>
+    <div><strong>Resource:</strong> project</div>
+    <div><strong>Confidence:</strong> High</div>
+    <div><strong>Status:</strong> Confirmed</div>
+  </div>
+
+  <div><strong>Expected:</strong> <span style="color:var(--text-muted);">Access DENY (Expected HTTP [401 403 404])</span></div>
+  <div style="margin-top:0.25rem;"><strong>Observed:</strong> <span style="color:var(--critical);">Access allowed with HTTP 200 200 OK</span></div>
+
+  <h4 style="margin-top:1rem;margin-bottom:0.5rem;font-size:0.95rem;">Reproduction</h4>
+  <pre><code>curl -i -X GET &#34;http://127.0.0.1:8080/api/projects&#34; \
+  -H &#34;Authorization: Bearer &lt;TEST_IDENTITY_TOKEN&gt;&#34; \
+  -H &#34;X-Tenant-ID: org-b&#34;</code></pre>
+
+  <div class="remediation-box">
+    <strong>Remediation:</strong> Enforce strict tenant_id scoping in database queries and verify tenant membership from authenticated session token.
+  </div>
+</div>
+
+<div class="finding-card">
+  <div class="finding-header">
+    <div>
+      <h3 class="finding-title">Revoked-Access Inconsistency: GET http://127.0.0.1:8080/api/projects</h3>
+      <div style="color:var(--text-muted);font-size:0.85rem;margin-top:0.25rem;">project | ID: SW-FINDING-0002</div>
+    </div>
+    <span class="badge badge-critical">Critical</span>
+  </div>
+
+  <div class="meta-row">
+    <div><strong>Identity:</strong> Dave (Revoked Member) (Role: member, Tenant: org-a)</div>
+    <div><strong>Resource:</strong> project</div>
+    <div><strong>Confidence:</strong> High</div>
+    <div><strong>Status:</strong> Confirmed</div>
+  </div>
+
+  <div><strong>Expected:</strong> <span style="color:var(--text-muted);">Access DENY (Expected HTTP [401 403 404])</span></div>
+  <div style="margin-top:0.25rem;"><strong>Observed:</strong> <span style="color:var(--critical);">Access allowed with HTTP 200 200 OK</span></div>
+
+  <h4 style="margin-top:1rem;margin-bottom:0.5rem;font-size:0.95rem;">Reproduction</h4>
+  <pre><code>curl -i -X GET &#34;http://127.0.0.1:8080/api/projects&#34; \
+  -H &#34;Authorization: Bearer &lt;TEST_IDENTITY_TOKEN&gt;&#34; \
+  -H &#34;X-Tenant-ID: org-a&#34;</code></pre>
+
+  <div class="remediation-box">
+    <strong>Remediation:</strong> Check real-time revocation status in database/cache rather than relying solely on non-expiring JWT claims.
+  </div>
+</div>
+
+<div class="finding-card">
+  <div class="finding-header">
+    <div>
+      <h3 class="finding-title">Broken Authentication: GET http://127.0.0.1:8080/api/projects</h3>
+      <div style="color:var(--text-muted);font-size:0.85rem;margin-top:0.25rem;">project | ID: SW-FINDING-0003</div>
+    </div>
+    <span class="badge badge-high">High</span>
+  </div>
+
+  <div class="meta-row">
+    <div><strong>Identity:</strong> Anonymous User (Role: anonymous, Tenant: )</div>
+    <div><strong>Resource:</strong> project</div>
+    <div><strong>Confidence:</strong> High</div>
+    <div><strong>Status:</strong> Confirmed</div>
+  </div>
+
+  <div><strong>Expected:</strong> <span style="color:var(--text-muted);">Access DENY (Expected HTTP [401 403 404])</span></div>
+  <div style="margin-top:0.25rem;"><strong>Observed:</strong> <span style="color:var(--critical);">Access allowed with HTTP 200 200 OK</span></div>
+
+  <h4 style="margin-top:1rem;margin-bottom:0.5rem;font-size:0.95rem;">Reproduction</h4>
+  <pre><code>curl -i -X GET &#34;http://127.0.0.1:8080/api/projects&#34; \
+  -H &#34;Authorization: Bearer &lt;TEST_IDENTITY_TOKEN&gt;&#34;</code></pre>
+
+  <div class="remediation-box">
+    <strong>Remediation:</strong> Enforce authentication middleware on all private API routes.
+  </div>
+</div>
+
+<div class="finding-card">
+  <div class="finding-header">
+    <div>
+      <h3 class="finding-title">Cross-Tenant Access Weakness: GET http://127.0.0.1:8080/api/projects/1001</h3>
+      <div style="color:var(--text-muted);font-size:0.85rem;margin-top:0.25rem;">project | ID: SW-FINDING-0004</div>
+    </div>
+    <span class="badge badge-critical">Critical</span>
+  </div>
+
+  <div class="meta-row">
+    <div><strong>Identity:</strong> Charlie (Member Org-B) (Role: member, Tenant: org-b)</div>
+    <div><strong>Resource:</strong> project</div>
+    <div><strong>Confidence:</strong> High</div>
+    <div><strong>Status:</strong> Confirmed</div>
+  </div>
+
+  <div><strong>Expected:</strong> <span style="color:var(--text-muted);">Access DENY (Expected HTTP [401 403 404])</span></div>
+  <div style="margin-top:0.25rem;"><strong>Observed:</strong> <span style="color:var(--critical);">Access allowed with HTTP 200 200 OK</span></div>
+
+  <h4 style="margin-top:1rem;margin-bottom:0.5rem;font-size:0.95rem;">Reproduction</h4>
+  <pre><code>curl -i -X GET &#34;http://127.0.0.1:8080/api/projects/1001&#34; \
+  -H &#34;Authorization: Bearer &lt;TEST_IDENTITY_TOKEN&gt;&#34; \
+  -H &#34;X-Tenant-ID: org-b&#34;</code></pre>
+
+  <div class="remediation-box">
+    <strong>Remediation:</strong> Enforce strict tenant_id scoping in database queries and verify tenant membership from authenticated session token.
+  </div>
+</div>
+
+<div class="finding-card">
+  <div class="finding-header">
+    <div>
+      <h3 class="finding-title">Revoked-Access Inconsistency: GET http://127.0.0.1:8080/api/projects/1001</h3>
+      <div style="color:var(--text-muted);font-size:0.85rem;margin-top:0.25rem;">project | ID: SW-FINDING-0005</div>
+    </div>
+    <span class="badge badge-critical">Critical</span>
+  </div>
+
+  <div class="meta-row">
+    <div><strong>Identity:</strong> Dave (Revoked Member) (Role: member, Tenant: org-a)</div>
+    <div><strong>Resource:</strong> project</div>
+    <div><strong>Confidence:</strong> High</div>
+    <div><strong>Status:</strong> Confirmed</div>
+  </div>
+
+  <div><strong>Expected:</strong> <span style="color:var(--text-muted);">Access DENY (Expected HTTP [401 403 404])</span></div>
+  <div style="margin-top:0.25rem;"><strong>Observed:</strong> <span style="color:var(--critical);">Access allowed with HTTP 200 200 OK</span></div>
+
+  <h4 style="margin-top:1rem;margin-bottom:0.5rem;font-size:0.95rem;">Reproduction</h4>
+  <pre><code>curl -i -X GET &#34;http://127.0.0.1:8080/api/projects/1001&#34; \
+  -H &#34;Authorization: Bearer &lt;TEST_IDENTITY_TOKEN&gt;&#34; \
+  -H &#34;X-Tenant-ID: org-a&#34;</code></pre>
+
+  <div class="remediation-box">
+    <strong>Remediation:</strong> Check real-time revocation status in database/cache rather than relying solely on non-expiring JWT claims.
+  </div>
+</div>
+
+<div class="finding-card">
+  <div class="finding-header">
+    <div>
+      <h3 class="finding-title">Broken Authentication: GET http://127.0.0.1:8080/api/projects/1001</h3>
+      <div style="color:var(--text-muted);font-size:0.85rem;margin-top:0.25rem;">project | ID: SW-FINDING-0006</div>
+    </div>
+    <span class="badge badge-high">High</span>
+  </div>
+
+  <div class="meta-row">
+    <div><strong>Identity:</strong> Anonymous User (Role: anonymous, Tenant: )</div>
+    <div><strong>Resource:</strong> project</div>
+    <div><strong>Confidence:</strong> High</div>
+    <div><strong>Status:</strong> Confirmed</div>
+  </div>
+
+  <div><strong>Expected:</strong> <span style="color:var(--text-muted);">Access DENY (Expected HTTP [401 403 404])</span></div>
+  <div style="margin-top:0.25rem;"><strong>Observed:</strong> <span style="color:var(--critical);">Access allowed with HTTP 200 200 OK</span></div>
+
+  <h4 style="margin-top:1rem;margin-bottom:0.5rem;font-size:0.95rem;">Reproduction</h4>
+  <pre><code>curl -i -X GET &#34;http://127.0.0.1:8080/api/projects/1001&#34; \
+  -H &#34;Authorization: Bearer &lt;TEST_IDENTITY_TOKEN&gt;&#34;</code></pre>
+
+  <div class="remediation-box">
+    <strong>Remediation:</strong> Enforce authentication middleware on all private API routes.
+  </div>
+</div>
+
+<div class="finding-card">
+  <div class="finding-header">
+    <div>
+      <h3 class="finding-title">Cross-Tenant Access Weakness: GET http://127.0.0.1:8080/api/projects/1001/secrets</h3>
+      <div style="color:var(--text-muted);font-size:0.85rem;margin-top:0.25rem;">secret | ID: SW-FINDING-0007</div>
+    </div>
+    <span class="badge badge-critical">Critical</span>
+  </div>
+
+  <div class="meta-row">
+    <div><strong>Identity:</strong> Charlie (Member Org-B) (Role: member, Tenant: org-b)</div>
+    <div><strong>Resource:</strong> secret</div>
+    <div><strong>Confidence:</strong> High</div>
+    <div><strong>Status:</strong> Confirmed</div>
+  </div>
+
+  <div><strong>Expected:</strong> <span style="color:var(--text-muted);">Access DENY (Expected HTTP [401 403 404])</span></div>
+  <div style="margin-top:0.25rem;"><strong>Observed:</strong> <span style="color:var(--critical);">Access allowed with HTTP 200 200 OK</span></div>
+
+  <h4 style="margin-top:1rem;margin-bottom:0.5rem;font-size:0.95rem;">Reproduction</h4>
+  <pre><code>curl -i -X GET &#34;http://127.0.0.1:8080/api/projects/1001/secrets&#34; \
+  -H &#34;Authorization: Bearer &lt;TEST_IDENTITY_TOKEN&gt;&#34; \
+  -H &#34;X-Tenant-ID: org-b&#34;</code></pre>
+
+  <div class="remediation-box">
+    <strong>Remediation:</strong> Enforce strict tenant_id scoping in database queries and verify tenant membership from authenticated session token.
+  </div>
+</div>
+
+<div class="finding-card">
+  <div class="finding-header">
+    <div>
+      <h3 class="finding-title">Revoked-Access Inconsistency: GET http://127.0.0.1:8080/api/projects/1001/secrets</h3>
+      <div style="color:var(--text-muted);font-size:0.85rem;margin-top:0.25rem;">secret | ID: SW-FINDING-0008</div>
+    </div>
+    <span class="badge badge-critical">Critical</span>
+  </div>
+
+  <div class="meta-row">
+    <div><strong>Identity:</strong> Dave (Revoked Member) (Role: member, Tenant: org-a)</div>
+    <div><strong>Resource:</strong> secret</div>
+    <div><strong>Confidence:</strong> High</div>
+    <div><strong>Status:</strong> Confirmed</div>
+  </div>
+
+  <div><strong>Expected:</strong> <span style="color:var(--text-muted);">Access DENY (Expected HTTP [401 403 404])</span></div>
+  <div style="margin-top:0.25rem;"><strong>Observed:</strong> <span style="color:var(--critical);">Access allowed with HTTP 200 200 OK</span></div>
+
+  <h4 style="margin-top:1rem;margin-bottom:0.5rem;font-size:0.95rem;">Reproduction</h4>
+  <pre><code>curl -i -X GET &#34;http://127.0.0.1:8080/api/projects/1001/secrets&#34; \
+  -H &#34;Authorization: Bearer &lt;TEST_IDENTITY_TOKEN&gt;&#34; \
+  -H &#34;X-Tenant-ID: org-a&#34;</code></pre>
+
+  <div class="remediation-box">
+    <strong>Remediation:</strong> Check real-time revocation status in database/cache rather than relying solely on non-expiring JWT claims.
+  </div>
+</div>
+
+<div class="finding-card">
+  <div class="finding-header">
+    <div>
+      <h3 class="finding-title">Broken Authentication: GET http://127.0.0.1:8080/api/projects/1001/secrets</h3>
+      <div style="color:var(--text-muted);font-size:0.85rem;margin-top:0.25rem;">secret | ID: SW-FINDING-0009</div>
+    </div>
+    <span class="badge badge-high">High</span>
+  </div>
+
+  <div class="meta-row">
+    <div><strong>Identity:</strong> Anonymous User (Role: anonymous, Tenant: )</div>
+    <div><strong>Resource:</strong> secret</div>
+    <div><strong>Confidence:</strong> High</div>
+    <div><strong>Status:</strong> Confirmed</div>
+  </div>
+
+  <div><strong>Expected:</strong> <span style="color:var(--text-muted);">Access DENY (Expected HTTP [401 403 404])</span></div>
+  <div style="margin-top:0.25rem;"><strong>Observed:</strong> <span style="color:var(--critical);">Access allowed with HTTP 200 200 OK</span></div>
+
+  <h4 style="margin-top:1rem;margin-bottom:0.5rem;font-size:0.95rem;">Reproduction</h4>
+  <pre><code>curl -i -X GET &#34;http://127.0.0.1:8080/api/projects/1001/secrets&#34; \
+  -H &#34;Authorization: Bearer &lt;TEST_IDENTITY_TOKEN&gt;&#34;</code></pre>
+
+  <div class="remediation-box">
+    <strong>Remediation:</strong> Enforce authentication middleware on all private API routes.
+  </div>
+</div>
+
+<div class="finding-card">
+  <div class="finding-header">
+    <div>
+      <h3 class="finding-title">Role-Based Authorization Flaw: DELETE http://127.0.0.1:8080/api/projects/1001</h3>
+      <div style="color:var(--text-muted);font-size:0.85rem;margin-top:0.25rem;">project | ID: SW-FINDING-0010</div>
+    </div>
+    <span class="badge badge-high">High</span>
+  </div>
+
+  <div class="meta-row">
+    <div><strong>Identity:</strong> Bob (Viewer) (Role: viewer, Tenant: org-a)</div>
+    <div><strong>Resource:</strong> project</div>
+    <div><strong>Confidence:</strong> High</div>
+    <div><strong>Status:</strong> Confirmed</div>
+  </div>
+
+  <div><strong>Expected:</strong> <span style="color:var(--text-muted);">Access DENY (Expected HTTP [401 403 404])</span></div>
+  <div style="margin-top:0.25rem;"><strong>Observed:</strong> <span style="color:var(--critical);">Access allowed with HTTP 204 204 No Content</span></div>
+
+  <h4 style="margin-top:1rem;margin-bottom:0.5rem;font-size:0.95rem;">Reproduction</h4>
+  <pre><code>curl -i -X DELETE &#34;http://127.0.0.1:8080/api/projects/1001&#34; \
+  -H &#34;Authorization: Bearer &lt;TEST_IDENTITY_TOKEN&gt;&#34; \
+  -H &#34;X-Tenant-ID: org-a&#34;</code></pre>
+
+  <div class="remediation-box">
+    <strong>Remediation:</strong> Ensure role-based permission checks verify DELETE permission before executing project deletion.
+  </div>
+</div>
+
+</div>
+</body>
+</html>
